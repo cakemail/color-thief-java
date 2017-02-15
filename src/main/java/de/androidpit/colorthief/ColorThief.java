@@ -18,11 +18,11 @@
 
 package de.androidpit.colorthief;
 
+import de.androidpit.colorthief.MMCQ.CMap;
+
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
-import java.util.Arrays;
-
-import de.androidpit.colorthief.MMCQ.CMap;
+import java.util.*;
 
 public class ColorThief
 {
@@ -131,6 +131,45 @@ public class ColorThief
         }
         return cmap.palette();
     }
+
+
+    public static List<Color> getPaletteWithTopOccurences(
+            BufferedImage sourceImage,
+            int colorCount,
+            int quality,
+            boolean ignoreWhite,
+            boolean onlySatured)
+    {
+        CMap cmap = getColorMap(sourceImage, colorCount, quality, ignoreWhite);
+        if (cmap == null)
+        {
+            return null;
+        }
+        List<Color> palette = new ArrayList<>();
+
+        /*int numVBoxes = cmap.vboxes.size();
+        int[][] palette = new int[numVBoxes][];*/
+        for (int i = 0; i < cmap.vboxes.size(); i++)
+        {
+            if(!onlySatured){
+                Color color = new Color();
+                color.setColor(cmap.vboxes.get(i).avg(false));
+                color.setOccurences(cmap.vboxes.get(i).count(false));
+                palette.add(color);
+            }else{
+                int[] colorFromCmap = cmap.vboxes.get(i).avg(false);
+                if(colorFromCmap[0] != colorFromCmap[1] && colorFromCmap[0] != colorFromCmap[2]){
+                    Color color = new Color();
+                    color.setColor(cmap.vboxes.get(i).avg(false));
+                    color.setOccurences(cmap.vboxes.get(i).count(false));
+                    palette.add(color);
+                }
+            }
+        }
+        return palette;
+    }
+
+
 
     /**
      * Use the median cut algorithm to cluster similar colors.
@@ -304,7 +343,7 @@ public class ColorThief
     /**
      * Gets the image's pixels via BufferedImage.getRGB(..). Slow, but the fast
      * method doesn't work for all color models.
-     * 
+     *
      * @param sourceImage
      *            the source image
      * @param quality
